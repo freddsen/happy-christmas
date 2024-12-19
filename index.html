@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            background-color: black;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        #terminal {
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+
+        .cursor {
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.1;
+            z-index: -1;
+        }
+
+        input {
+            background: transparent;
+            border: none;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            outline: none;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<canvas class="matrix-bg" id="matrix"></canvas>
+<div id="terminal"></div>
+<input type="text" id="userInput" class="hidden" autocomplete="off">
+
+<script>
+    const messages = [
+        "INITIALISIERE SYSTEM...",
+        "ZUGRIFF AUF GEHEIME DATEIEN...",
+        "ENTSCHLÜSSELE NACHRICHT...",
+        "[ZUGRIFF VERWEIGERT]",
+        "AUTHENTIFIZIERUNG ERFORDERLICH",
+        "BITTE BEANTWORTEN SIE DIE SICHERHEITSFRAGEN:",
+    ];
+
+    const questions = [
+        ">>> FRAGE 1: LIEBLINGSFILM-GENRE? [sci-fi/action/fantasy]",
+        ">>> FRAGE 2: BEVORZUGTES BETRIEBSSYSTEM? [windows/linux/mac]",
+        ">>> FRAGE 3: ERSTE PROGRAMMIERSPRACHE? [python/java/c++]"
+    ];
+
+    const giftMessage = [
+        "ZUGRIFF GEWÄHRT",
+        "ENTSCHLÜSSELE GESCHENK...",
+        ".",
+        "..",
+        "...",
+        "GESCHENK GEFUNDEN:",
+        "",
+        "🎬 MISSION: GEMEINSAMER KINOABEND 🎬",
+        "",
+        "PARAMETER:",
+        "- FILM DEINER WAHL",
+        "- VERPFLEGUNG INKLUSIVE",
+        "- QUALITÄTSZEIT MIT DEINEM GESCHWISTERCHEN",
+        "",
+        "MISSION AKZEPTIEREN? [J/N]",
+        "",
+        "FROHE WEIHNACHTEN! 🎄"
+    ];
+
+    let currentStep = 0;
+    let questionIndex = 0;
+    const terminal = document.getElementById('terminal');
+    const input = document.getElementById('userInput');
+
+    // Matrix rain effect
+    const canvas = document.getElementById('matrix');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%^&*";
+    const fontSize = 14;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+
+    function drawMatrix() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#0F0';
+        ctx.font = fontSize + 'px monospace';
+
+        for (let i = 0; i < drops.length; i++) {
+            const text = chars[Math.floor(Math.random() * chars.length)];
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                drops[i] = 0;
+            }
+            drops[i]++;
+        }
+    }
+
+    async function typeWriter(text, delay = 50) {
+        for (let i = 0; i < text.length; i++) {
+            terminal.textContent += text[i];
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+        terminal.textContent += '\n';
+    }
+
+    async function init() {
+        for (const msg of messages) {
+            await typeWriter(msg);
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        await showNextQuestion();
+    }
+
+    async function showNextQuestion() {
+        if (questionIndex < questions.length) {
+            await typeWriter(questions[questionIndex]);
+            input.classList.remove('hidden');
+            input.focus();
+        } else {
+            await showGift();
+        }
+    }
+
+    async function showGift() {
+        input.classList.add('hidden');
+        for (const line of giftMessage) {
+            await typeWriter(line);
+            await new Promise(resolve => setTimeout(resolve, 300));
+        }
+    }
+
+    input.addEventListener('keypress', async function(e) {
+        if (e.key === 'Enter') {
+            const answer = this.value;
+            this.value = '';
+            await typeWriter(`>>> ANTWORT AUFGEZEICHNET: ${answer}`);
+            questionIndex++;
+            await showNextQuestion();
+        }
+    });
+
+    setInterval(drawMatrix, 50);
+    init();
+</script>
+</body>
+</html>
