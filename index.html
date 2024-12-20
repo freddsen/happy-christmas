@@ -2,6 +2,7 @@
 <html>
 <head>
     <style>
+        /* Core Styles */
         body {
             background-color: black;
             color: #00ff00;
@@ -9,23 +10,20 @@
             padding: 20px;
             margin: 0;
             min-height: 100vh;
-            overflow: hidden;
+            overflow-y: auto;
+            margin-bottom: 50px;
+            font-size: 14px;
         }
 
         #terminal {
             white-space: pre-wrap;
-            line-height: 1.5;
+            line-height: 1.3;
+            margin-bottom: 60px;
+            position: relative;
+            z-index: 1;
         }
 
-        .cursor {
-            animation: blink 1s infinite;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
-        }
-
+        /* Visual Effects */
         .matrix-bg {
             position: fixed;
             top: 0;
@@ -33,145 +31,884 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
-            opacity: 0.1;
-            z-index: -1;
+            opacity: 0.15;
+            z-index: 0;
         }
 
-        input {
-            background: transparent;
-            border: none;
-            color: #00ff00;
-            font-family: 'Courier New', monospace;
-            font-size: 16px;
-            outline: none;
+        .scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            margin-top: 10px;
+            height: 2px;
+            background: rgba(0, 255, 0, 0.1);
+            opacity: 0.75;
+            animation: scanline 6s linear infinite;
+            z-index: 2;
         }
 
-        .hidden {
-            display: none;
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 15px;
+            background: #00ff00;
+            margin-left: 2px;
+            animation: blink 1s infinite;
+        }
+
+        /* Utility Classes */
+        .error {
+            color: #ff0000;
+            text-shadow: 0 0 5px #ff0000;
+            font-weight: bold;
+        }
+
+        .success {
+            color: #00ff00;
+            text-shadow: 0 0 5px #00ff00;
+            animation: pulse 2s infinite;
+        }
+
+        .header {
+            color: #00ffff;
+            text-shadow: 0 0 5px #00ffff;
+        }
+
+        /* Enhanced Final Message Styling */
+        .final-message {
+            color: #00FFFF;
+            text-shadow: 0 0 10px #00FFFF, 0 0 20px #0088FF;
+            font-size: 1.2em;
+            margin: 20px 0;
+            animation: cyanPulse 3s infinite;
+            letter-spacing: 2px;
+        }
+
+        /* Message Separator */
+        .message-separator {
+            color: #00FFFF;
+            text-shadow: 0 0 15px #00FFFF;
+            text-align: center;
+            margin: 20px 0;
+            padding: 10px;
+            border-top: 1px solid #00FFFF;
+            border-bottom: 1px solid #00FFFF;
+            animation: separatorGlow 2s infinite;
+        }
+
+        /* System Overload Effect */
+        .system-overload {
+            animation: systemOverload 0.1s infinite;
+        }
+
+        /* Warning Effects */
+        .warning-flash {
+            animation: warningFlash 0.5s ease-in-out;
+        }
+
+        .error-message {
+            color: #ff0000;
+            text-shadow: 0 0 10px #ff0000;
+            animation: errorBlink 0.2s infinite;
+            font-weight: bold;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #001100;
+            margin: 10px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: #00ff00;
+            width: 0%;
+            transition: width 0.5s ease;
+            position: relative;
+        }
+
+        .progress-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                    90deg,
+                    transparent,
+                    rgba(0, 255, 0, 0.4),
+                    transparent
+            );
+            animation: progress-shine 1s linear infinite;
+        }
+
+        /* Gift Animation */
+        .gift-animation {
+            font-family: monospace;
+            white-space: pre;
+            animation: giftPulse 2s infinite;
+            text-align: center;
+            margin-top: 20px;
+            position: relative;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0% { text-shadow: 0 0 5px #00ff00; }
+            50% { text-shadow: 0 0 20px #00ff00; }
+            100% { text-shadow: 0 0 5px #00ff00; }
+        }
+
+        @keyframes cyanPulse {
+            0% { text-shadow: 0 0 10px #00FFFF; }
+            50% { text-shadow: 0 0 25px #00FFFF, 0 0 35px #0088FF; }
+            100% { text-shadow: 0 0 10px #00FFFF; }
+        }
+
+        @keyframes scanline {
+            0% { top: -100% }
+            100% { top: 100% }
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        @keyframes giftPulse {
+            0% { transform: scale(1); text-shadow: 0 0 5px #00ff00; }
+            50% { transform: scale(1.1); text-shadow: 0 0 20px #00ff00; }
+            100% { transform: scale(1); text-shadow: 0 0 5px #00ff00; }
+        }
+
+        @keyframes progress-shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        @keyframes warningFlash {
+            0%, 100% { background-color: transparent; }
+            50% { background-color: rgba(255, 0, 0, 0.3); }
+        }
+
+        @keyframes errorBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes systemOverload {
+            0% { transform: translate(0, 0); }
+            25% { transform: translate(-2px, 2px); }
+            50% { transform: translate(2px, -2px); }
+            75% { transform: translate(-2px, -2px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        @keyframes separatorGlow {
+            0%, 100% { border-color: #00FFFF; }
+            50% { border-color: #0088FF; }
+        }
+
+        /* game:*/
+        .key-sequence {
+            font-family: 'Courier New', monospace;
+            color: #00ff00;
+            font-size: 24px;
+            letter-spacing: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .key {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 0 5px;
+            border: 2px solid #00ff00;
+            background: rgba(0, 255, 0, 0.1);
+            transition: all 0.3s;
+        }
+
+        .key.active {
+            background: #00ff00;
+            color: #000;
+            box-shadow: 0 0 20px #00ff00;
+        }
+
+        .key.wrong {
+            background: #ff0000;
+            border-color: #ff0000;
+            color: #000;
+        }
+
+        .timer-bar {
+            width: 100%;
+            height: 10px;
+            background: #001100;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .timer-fill {
+            height: 100%;
+            background: #00ff00;
+            width: 100%;
+            transition: width linear;
+        }
+
+        .score {
+            color: #00ff00;
+            font-size: 18px;
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        @keyframes success-flash {
+            0% { background: rgba(0, 255, 0, 0.3); }
+            100% { background: transparent; }
+        }
+
+        .success-flash {
+            animation: success-flash 0.5s;
         }
     </style>
 </head>
 <body>
+<div class="scanline"></div>
 <canvas class="matrix-bg" id="matrix"></canvas>
 <div id="terminal"></div>
-<input type="text" id="userInput" class="hidden" autocomplete="off">
 
+<div id="game-container" style="display: none">
+    <div class="score">SECURITY LEVEL: <span id="score">0</span>/3</div>
+    <div class="timer-bar">
+        <div class="timer-fill"></div>
+    </div>
+    <div class="key-sequence" id="key-sequence"></div>
+</div>
 <script>
-    const messages = [
-        "INITIALISIERE SYSTEM...",
-        "ZUGRIFF AUF GEHEIME DATEIEN...",
-        "ENTSCHLÜSSELE NACHRICHT...",
-        "[ZUGRIFF VERWEIGERT]",
-        "AUTHENTIFIZIERUNG ERFORDERLICH",
-        "BITTE BEANTWORTEN SIE DIE SICHERHEITSFRAGEN:",
-    ];
+    // Konstanten und Konfiguration
+    const CONFIG = {
+        maxAttempts: 3,
+        systemDelay: 10,
+        userDelay: 200,
+        bootDelay: 100,
+        chaosDelay: 150,
+        recoveryDelay: 400
+    };
 
-    const questions = [
-        ">>> FRAGE 1: LIEBLINGSFILM-GENRE? [sci-fi/action/fantasy]",
-        ">>> FRAGE 2: BEVORZUGTES BETRIEBSSYSTEM? [windows/linux/mac]",
-        ">>> FRAGE 3: ERSTE PROGRAMMIERSPRACHE? [python/java/c++]"
-    ];
+    const MESSAGES = {
+        bootSequence: [
+            "INITIATING QUANTUM SECURED BOOT SEQUENCE...",
+            "[0.000] DETECTING HARDWARE...",
+            "[0.012] CPU0: Neural Processing Unit v3.14 detected",
+            "[0.024] Memory: Quantum-Entangled RAM Array initialized",
+            "[0.036] Loading advanced neural patterns...",
+            "[0.048] Calibrating quantum encryption modules...",
+            "[0.124] SECURITY ALERT: Unauthorized access attempt detected",
+            "[0.136] Engaging countermeasures...",
+            "[0.148] Initiating deep scan...",
+            "ACCESSING CLASSIFIED BROTHERHOOD DATABASE...",
+            "[!] ACCESS DENIED - SECURITY LEVEL OMEGA",
+            "BROTHER VERIFICATION PROTOCOL INITIATED",
+            "",
+            "COMMENCING NEURAL IDENTITY SCAN..."
+        ],
+        verificationQuestions: [
+            ">>> SECURITY QUESTION 1: Wer schlaeft den ganzen Tag und traut sich abends trotzdem nicht vor die Tuer?",
+            ">>> SECURITY QUESTION 2: Wer benutzt die Klimaanlage zum heizen und will dann auch noch Coup Romanoff?",
+            ">>> SECURITY QUESTION 3: Bei welchem Spiel gewinnt Grosi laut Opas Aussagen immer viel zu oft?",
+        ],
+        correctAnswers: [
+            ['lola', 'Lola'],
+            ['opa', 'Opa'],
+            ['lotto', 'Lotto']
+        ],
+        movieOptions: {
+            "1": "Der Herr der Ringe: Die Schlacht Rohirrim",
+            "2": "VENOM: THE LAST DANCE",
+            "3": "SONIC"
+        },
+        foodOptions: {
+            "1": "SUSHI",
+            "2": "BURGER",
+            "3": "TACOS"
+        },
+        warnings: [
+            "WARNING: UNAUTHORIZED ACCESS DETECTED",
+            "CRITICAL: SYSTEM OVERLOAD",
+            "ALERT: FIREWALL BREACH ATTEMPT",
+            "DANGER: NEURAL NETWORK UNSTABLE",
+            "CRITICAL: QUANTUM TUNNELING DETECTED",
+            "WARNING: DIMENSIONAL BREACH IMMINENT",
+            "ALERT: TIMELINE INTERFERENCE DETECTED",
+            "WARNING: REALITY MATRIX DESTABILIZING",
+            "CRITICAL: QUANTUM ENTANGLEMENT FAILURE",
+            "DANGER: NEURAL PATHWAYS CORRUPTED",
+            "ALERT: MEMORY CORE MELTDOWN",
+            "WARNING: TIME DILATION DETECTED",
+            "CRITICAL: SYSTEM INTEGRITY COMPROMISED",
+            "DANGER: QUANTUM FLUX OVERLOAD"
+        ]
+    };
 
-    const giftMessage = [
-        "ZUGRIFF GEWÄHRT",
-        "ENTSCHLÜSSELE GESCHENK...",
-        ".",
-        "..",
-        "...",
-        "GESCHENK GEFUNDEN:",
-        "",
-        "🎬 MISSION: GEMEINSAMER KINOABEND 🎬",
-        "",
-        "PARAMETER:",
-        "- FILM DEINER WAHL",
-        "- VERPFLEGUNG INKLUSIVE",
-        "- QUALITÄTSZEIT MIT DEINEM GESCHWISTERCHEN",
-        "",
-        "MISSION AKZEPTIEREN? [J/N]",
-        "",
-        "FROHE WEIHNACHTEN! 🎄"
-    ];
+    // Utility Funktionen
+    const utils = {
+        sleep: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
 
-    let currentStep = 0;
-    let questionIndex = 0;
-    const terminal = document.getElementById('terminal');
-    const input = document.getElementById('userInput');
+        ensureScroll: () => {
+            const scrollingElement = document.scrollingElement || document.documentElement;
+            const shouldScroll = scrollingElement.scrollHeight - scrollingElement.clientHeight <= scrollingElement.scrollTop + 100;
 
-    // Matrix rain effect
+            if (shouldScroll) {
+                window.scrollTo({
+                    top: scrollingElement.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }
+        },
+
+        generateHexDump: () => {
+            const addr = Math.floor(Math.random() * 0xFFFFFFFF).toString(16).padStart(8, '0');
+            const bytes = Array(16).fill(0)
+                .map(() => Math.floor(Math.random() * 256).toString(16).padStart(2, '0'))
+                .join(' ');
+            return `${addr} | ${bytes}`;
+        }
+    };
+
+    // Zustandsverwaltung
+    const state = {
+        attempts: 0,
+        questionIndex: 0,
+        currentPhase: 'boot',
+        selectedMovie: '',
+        selectedFood: '',
+        userInput: '',
+        isAcceptingInput: false
+    };
+
+    // Kern-Funktionen
+    async function typeWriter(text, isSystem = false) {
+        const delay = isSystem ? CONFIG.systemDelay : CONFIG.userDelay;
+        const line = document.createElement('div');
+
+        if (Math.random() < 0.1) {
+            line.classList.add('glitch');
+            setTimeout(() => {
+                line.classList.add('active');
+                setTimeout(() => line.classList.remove('active'), 300);
+            }, Math.random() * 1000);
+        }
+
+        if (text.startsWith('>>>')) {
+            line.className = 'header';
+        } else if (text.startsWith('[ERROR]')) {
+            line.className = 'error';
+        } else if (text.includes('VERIFIED') || text.includes('ACCESS GRANTED')) {
+            line.className = 'success';
+        }
+
+        terminal.appendChild(line);
+
+        for (let i = 0; i < text.length; i++) {
+            line.textContent += text[i];
+            if (i % 3 === 0) {
+                await utils.sleep(delay);
+                utils.ensureScroll();
+            }
+        }
+
+        if (Math.random() < 0.05) {
+            line.style.transform = `translateX(${Math.random() * 2 - 1}px)`;
+            setTimeout(() => line.style.transform = '', 50);
+        }
+
+        utils.ensureScroll();
+    }
+
+    async function simulateDecryption(duration = 2000) {
+        // Start mit systemweitem Chaos
+        await typeWriter("INITIATING EMERGENCY PROTOCOLS...", true);
+        await typeWriter("!!! SYSTEM INSTABILITY DETECTED !!!", true);
+        await typeWriter("ATTEMPTING CONTAINMENT...", true);
+
+        // Längere Chaos-Phase
+        for (let i = 0; i < 50; i++) {
+            const line = document.createElement('div');
+
+            if (Math.random() < 0.4) {
+                line.className = 'error-message';
+                line.textContent = MESSAGES.warnings[Math.floor(Math.random() * MESSAGES.warnings.length)];
+                terminal.appendChild(line);
+                document.body.classList.add('warning-flash');
+
+                if (Math.random() < 0.3) {
+                    document.body.classList.add('system-overload');
+                    await utils.sleep(200);
+                    document.body.classList.remove('system-overload');
+                }
+
+                await utils.sleep(100);
+                document.body.classList.remove('warning-flash');
+            } else {
+                line.textContent = utils.generateHexDump();
+                terminal.appendChild(line);
+            }
+
+            utils.ensureScroll();
+            await utils.sleep(Math.random() * CONFIG.chaosDelay);
+        }
+
+        await typeWriter("CRITICAL FIREWALL BREACH DETECTED!", true);
+        await typeWriter("EMERGENCY PROTOCOL ACTIVATED", true);
+        await typeWriter("MANUAL OVERRIDE REQUIRED", true);
+        await typeWriter("HACK THE MAINFRAME TO PROCEED...", true);
+
+        // Game Container anzeigen
+        const gameContainer = document.getElementById('game-container');
+        gameContainer.style.display = 'block';
+        utils.ensureScroll();
+
+        // Spiel starten
+        const gameSuccess = await startGame();
+
+        if (!gameSuccess) {
+            await typeWriter("HACK FAILED - SECURITY SYSTEMS REBOOTING...", true);
+            await utils.sleep(1000);
+            // Rekursiver Aufruf bei Fehlschlag
+            return await simulateDecryption(duration);
+        }
+
+        // Bei Erfolg weitermachen
+        await typeWriter("HACK SUCCESSFUL - ACCESSING SECURE DATA...", true);
+        gameContainer.style.display = 'none';
+        // Stabilisierungsphase
+        const recoverySteps = [
+            "INITIATING EMERGENCY RECOVERY PROTOCOLS...",
+            "STABILIZING QUANTUM MATRIX...",
+            "RECALIBRATING NEURAL PATHWAYS...",
+            "RECONSTRUCTING DATA STREAMS...",
+            "REALIGNING QUANTUM SIGNATURES...",
+            "RESTORING SYSTEM INTEGRITY...",
+            "REALITY ANCHOR POINTS DETECTED...",
+            "DIMENSIONAL STABILITY RESTORED...",
+            "QUANTUM FIELD NORMALIZED...",
+            "SYSTEM RETURNING TO NORMAL PARAMETERS...",
+            "ACCESSING SECURE MESSAGE PROTOCOLS..."
+        ];
+
+        for (const step of recoverySteps) {
+            await typeWriter(step, true);
+            await utils.sleep(CONFIG.recoveryDelay);
+            utils.ensureScroll();
+        }
+    }
+    // Verarbeitung von Benutzereingaben
+    async function processAnswer(answer) {
+        state.isAcceptingInput = false;
+
+        if (state.currentPhase === 'verification') {
+            const isCorrect = await verifyAnswer(answer);
+            if (isCorrect) {
+                state.questionIndex++;
+                if (state.questionIndex >= MESSAGES.verificationQuestions.length) {
+                    state.currentPhase = 'movie';
+                    state.questionIndex = 0;
+                    await showOptions('movie');
+                } else {
+                    await typeWriter(MESSAGES.verificationQuestions[state.questionIndex], false);
+                }
+            } else if (state.attempts < CONFIG.maxAttempts) {
+                await typeWriter(MESSAGES.verificationQuestions[state.questionIndex], false);
+            }
+        } else if (state.currentPhase === 'movie' || state.currentPhase === 'food') {
+            await handleSelection(answer);
+        }
+
+        if (state.currentPhase !== 'complete') {
+            await waitForInput();
+        }
+    }
+
+    async function verifyAnswer(answer) {
+        const correctAnswerOptions = MESSAGES.correctAnswers[state.questionIndex];
+        if (correctAnswerOptions.includes(answer)) {
+            await typeWriter('ANSWER VERIFIED: CORRECT', true);
+            state.attempts = 0;
+            return true;
+        } else {
+            state.attempts++;
+            const remainingAttempts = CONFIG.maxAttempts - state.attempts;
+            if (remainingAttempts > 0) {
+                await typeWriter(`INCORRECT ANSWER. ${remainingAttempts} ATTEMPTS REMAINING`, true);
+                return false;
+            } else {
+                await typeWriter('MAXIMUM ATTEMPTS EXCEEDED. SECURITY PROTOCOL ENGAGED.', true);
+                await rebootSystem();
+                return false;
+            }
+        }
+    }
+
+    async function handleSelection(answer) {
+        if (!['1', '2', '3'].includes(answer)) {
+            await typeWriter('INVALID INPUT. PLEASE SELECT 1, 2, OR 3', true);
+            await showOptions(state.currentPhase);
+            return;
+        }
+
+        if (state.currentPhase === 'movie') {
+            state.selectedMovie = MESSAGES.movieOptions[answer];
+            await typeWriter(`SELECTED: ${state.selectedMovie}`, true);
+            state.currentPhase = 'food';
+            await showOptions('food');
+        } else {
+            state.selectedFood = MESSAGES.foodOptions[answer];
+            await typeWriter(`SELECTED: ${state.selectedFood}`, true);
+            state.currentPhase = 'complete';
+            await showFinalMessage();
+        }
+    }
+
+    async function showOptions(phase) {
+        const options = phase === 'movie' ?
+            [">>> SELECT PREFERRED MOVIE:", ...Object.entries(MESSAGES.movieOptions).map(([k, v]) => `${k}) ${v}`)] :
+            [">>> SELECT FOOD PREFERENCE:", ...Object.entries(MESSAGES.foodOptions).map(([k, v]) => `${k}) ${v}`)];
+
+        for (const line of options) {
+            await typeWriter(line, false);
+            utils.ensureScroll();
+        }
+    }
+
+    async function showFinalMessage() {
+        await typeWriter("QUANTUM ENCRYPTION BROKEN", true);
+        await typeWriter("INITIATING FINAL DECRYPTION SEQUENCE...", true);
+
+        await simulateDecryption(3000);
+
+        await utils.sleep(2000);
+
+        const separator = document.createElement('div');
+        separator.className = 'message-separator';
+        separator.textContent = "=== SECURE MESSAGE RETRIEVED ===";
+        terminal.appendChild(separator);
+        utils.ensureScroll();
+
+        await utils.sleep(1000);
+
+        const messageLines = [
+            "",
+            "OPERATION: MOVIE EXPERIENCE SCHEDULED",
+            "",
+            "MISSION PARAMETERS:",
+            `TARGET ENTERTAINMENT: ${state.selectedMovie}`,
+            `SUSTENANCE PROTOCOL: ${state.selectedFood}`,
+            "ADDITIONAL RESOURCES: Unlimited Refreshments & Popcorn",
+            "",
+            "MISSION STATUS: READY FOR DEPLOYMENT",
+            "",
+        ];
+
+        for (const line of messageLines) {
+            await typeWriter(line, true);
+            await utils.sleep(300);
+            utils.ensureScroll();
+        }
+
+        await utils.sleep(1000);
+
+        const specialMessages = [
+            ">>> MERRY CHRISTMAS SAMU! <<<",
+            ">>> Ich freue mich auf einen schoenen Abend mit dir! <<<",
+            ">>> Dein Frederic <<<"
+        ];
+
+        for (const message of specialMessages) {
+            const messageLine = document.createElement('div');
+            messageLine.className = 'final-message';
+            messageLine.textContent = message;
+            terminal.appendChild(messageLine);
+            utils.ensureScroll();
+            await utils.sleep(1200);
+        }
+
+        // Finale ASCII Art
+        const asciiArt = `
+
+        .-(_)
+       / _/
+    .-'   \\
+   /       '.
+  ,-~--~-~-~-~-,
+                    {__.._...__..._}             ,888,
+    ,888,          /\\##"  6  6  "##/\\          ,88' \`88,
+  ,88' '88,__     |(\\ (__)    \`/)|     __,88'     \`88
+ ,88'   .8(_ \\_____\\_    '----'    _/_____/ _)8.       8'
+ 88    (___)\\ \\      '-.__    __.-'      / /(___)
+ 88    (___)88 |          '--'          | 88(___)
+ 8'      (__)88,___/                \\___,88(__)
+           __\`88,_/__________________\\_,88\`__
+          /    \`88,       |88|       ,88'    \\
+         /        \`88,    |88|    ,88'        \\
+        /____________\`88,_\\88/_,88\`____________\\
+       /88888888888888888;8888;88888888888888888\\
+      /^^^^^^^^^^^^^^^^^^\`/88\\\\^^^^^^^^^^^^^^^^^^\\
+jgs  /                    |88| \\============,     \\
+    /_  __  __  __   _ __ |88|_|^  MERRY    | _ ___\\
+    |;:.                  |88| | CHRISTMAS! |      |
+    |;;:.                 |88| '============'      |
+    |;;:.                 |88|                     |
+    |::.                  |88|                     |
+    |;;:'                 |88|                     |
+    |:;,                  |88|                     |
+    '---------------------""""---------------------'
+        `;
+
+        await utils.sleep(1000);
+
+        const animationDiv = document.createElement('div');
+        animationDiv.className = 'gift-animation';
+        animationDiv.textContent = asciiArt;
+        terminal.appendChild(animationDiv);
+        utils.ensureScroll();
+    }
+
+    async function rebootSystem() {
+        await typeWriter('SYSTEM REBOOT INITIATED...', true);
+        await utils.sleep(1000);
+        terminal.textContent = '';
+        state.attempts = 0;
+        state.questionIndex = 0;
+        state.currentPhase = 'boot';
+        state.userInput = '';
+        await init();
+    }
+
+    async function waitForInput() {
+        state.isAcceptingInput = true;
+        const inputLines = terminal.querySelectorAll('div');
+        inputLines.forEach(line => {
+            if (line.innerHTML.includes('cursor')) {
+                line.remove();
+            }
+        });
+
+        const inputLine = document.createElement('div');
+        terminal.appendChild(inputLine);
+        inputLine.innerHTML = `> <span class="cursor"></span>`;
+        utils.ensureScroll();
+    }
+
+    function updateTerminalInput() {
+        const lastLine = terminal.lastElementChild;
+        if (lastLine && state.isAcceptingInput) {
+            lastLine.innerHTML = `> ${state.userInput}<span class="cursor"></span>`;
+            utils.ensureScroll();
+        }
+    }
+
+    // Event Listeners
+    document.addEventListener('keydown', async function(e) {
+        if (!state.isAcceptingInput) return;
+
+        if (e.key === 'Enter') {
+            const answer = state.userInput.trim();
+            if (!answer) return;
+
+            const currentInputLine = terminal.lastElementChild;
+            currentInputLine.textContent = `> ${answer}`;
+
+            state.userInput = '';
+            await processAnswer(answer);
+            utils.ensureScroll();
+        } else if (e.key === 'Backspace') {
+            state.userInput = state.userInput.slice(0, -1);
+            updateTerminalInput();
+        } else if (e.key.length === 1) {
+            state.userInput += e.key;
+            updateTerminalInput();
+        }
+    });
+
+    // Initialization
+    async function init() {
+        for (const msg of MESSAGES.bootSequence) {
+            await typeWriter(msg, true);
+            await utils.sleep(CONFIG.bootDelay);
+            utils.ensureScroll();
+        }
+        state.currentPhase = 'verification';
+        await typeWriter(MESSAGES.verificationQuestions[0], false);
+        await waitForInput();
+    }
+
+    // Matrix Animation Setup
     const canvas = document.getElementById('matrix');
     const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
 
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%^&*";
-    const fontSize = 14;
-    const columns = canvas.width / fontSize;
-    const drops = Array(Math.floor(columns)).fill(1);
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    const matrixConfig = {
+        chars: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*",
+        fontSize: 14,
+        drops: Array(Math.floor(window.innerWidth / 14)).fill(1)
+    };
 
     function drawMatrix() {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#0F0';
-        ctx.font = fontSize + 'px monospace';
+        ctx.font = `${matrixConfig.fontSize}px monospace`;
 
-        for (let i = 0; i < drops.length; i++) {
-            const text = chars[Math.floor(Math.random() * chars.length)];
-            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-                drops[i] = 0;
+        for (let i = 0; i < matrixConfig.drops.length; i++) {
+            const text = matrixConfig.chars[Math.floor(Math.random() * matrixConfig.chars.length)];
+            const brightness = Math.random();
+            ctx.fillStyle = `rgba(0, ${Math.floor(255 * brightness)}, 0, 0.8)`;
+
+            ctx.fillText(text, i * matrixConfig.fontSize, matrixConfig.drops[i] * matrixConfig.fontSize);
+
+            if (matrixConfig.drops[i] * matrixConfig.fontSize > canvas.height && Math.random() > 0.975) {
+                matrixConfig.drops[i] = 0;
             }
-            drops[i]++;
+            matrixConfig.drops[i]++;
         }
     }
+    // game
+    const gameState = {
+        currentSequence: [],
+        playerSequence: [],
+        score: 0,
+        isPlaying: false,
+        timePerKey: 1000, // 1 Sekunde pro Taste
+    };
 
-    async function typeWriter(text, delay = 50) {
-        for (let i = 0; i < text.length; i++) {
-            terminal.textContent += text[i];
-            await new Promise(resolve => setTimeout(resolve, delay));
-        }
-        terminal.textContent += '\n';
+    const possibleKeys = ['A', 'S', 'D', 'F'];
+    const requiredScore = 3;
+
+    function generateSequence() {
+        return Array.from({length: 4}, () =>
+            possibleKeys[Math.floor(Math.random() * possibleKeys.length)]
+        );
     }
 
-    async function init() {
-        for (const msg of messages) {
-            await typeWriter(msg);
-            await new Promise(resolve => setTimeout(resolve, 500));
-        }
-        await showNextQuestion();
+    function displaySequence() {
+        const container = document.getElementById('key-sequence');
+        container.innerHTML = gameState.currentSequence
+            .map(key => `<span class="key">${key}</span>`)
+            .join('');
     }
 
-    async function showNextQuestion() {
-        if (questionIndex < questions.length) {
-            await typeWriter(questions[questionIndex]);
-            input.classList.remove('hidden');
-            input.focus();
-        } else {
-            await showGift();
-        }
+    function startTimer() {
+        const timerFill = document.querySelector('.timer-fill');
+        timerFill.style.width = '100%';
+        timerFill.style.transition = 'none';
+        // Force reflow
+        timerFill.offsetHeight;
+        timerFill.style.transition = `width ${gameState.timePerKey * gameState.currentSequence.length}ms linear`;
+        timerFill.style.width = '0%';
     }
 
-    async function showGift() {
-        input.classList.add('hidden');
-        for (const line of giftMessage) {
-            await typeWriter(line);
-            await new Promise(resolve => setTimeout(resolve, 300));
-        }
+    function updateScore() {
+        document.getElementById('score').textContent = gameState.score;
     }
 
-    input.addEventListener('keypress', async function(e) {
-        if (e.key === 'Enter') {
-            const answer = this.value;
-            this.value = '';
-            await typeWriter(`>>> ANTWORT AUFGEZEICHNET: ${answer}`);
-            questionIndex++;
-            await showNextQuestion();
-        }
-    });
+    function flashKey(index, correct) {
+        const keys = document.querySelectorAll('.key');
+        keys[index].classList.add(correct ? 'active' : 'wrong');
+        setTimeout(() => {
+            keys[index].classList.remove(correct ? 'active' : 'wrong');
+        }, 200);
+    }
 
+    async function startGame() {
+        const container = document.getElementById('game-container');
+        container.style.display = 'block';
+
+        gameState.isPlaying = true;
+        gameState.score = 0;
+        updateScore();
+
+        while (gameState.score < requiredScore && gameState.isPlaying) {
+            gameState.currentSequence = generateSequence();
+            gameState.playerSequence = [];
+
+            displaySequence();
+            startTimer();
+
+            const result = await handlePlayerInput();
+            if (result) {
+                gameState.score++;
+                updateScore();
+                if (gameState.score < requiredScore) {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+            } else {
+                gameState.score = Math.max(0, gameState.score - 1);
+                updateScore();
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+
+        if (gameState.score >= requiredScore) {
+            document.body.classList.add('success-flash');
+            setTimeout(() => {
+                document.body.classList.remove('success-flash');
+                container.style.display = 'none';
+            }, 1500);
+            return true; // Erfolg zurückgeben
+        }
+        return false; // Fehlschlag zurückgeben
+    }
+
+    function handlePlayerInput() {
+        return new Promise((resolve) => {
+            const handleKeyPress = (event) => {
+                const key = event.key.toUpperCase();
+                if (possibleKeys.includes(key)) {
+                    const currentIndex = gameState.playerSequence.length;
+                    const expectedKey = gameState.currentSequence[currentIndex];
+
+                    if (key === expectedKey) {
+                        flashKey(currentIndex, true);
+                        gameState.playerSequence.push(key);
+
+                        if (gameState.playerSequence.length === gameState.currentSequence.length) {
+                            document.removeEventListener('keydown', handleKeyPress);
+                            resolve(true);
+                        }
+                    } else {
+                        flashKey(currentIndex, false);
+                        document.removeEventListener('keydown', handleKeyPress);
+                        resolve(false);
+                    }
+                }
+            };
+
+            const timer = setTimeout(() => {
+                document.removeEventListener('keydown', handleKeyPress);
+                resolve(false);
+            }, gameState.timePerKey * gameState.currentSequence.length);
+
+            document.addEventListener('keydown', handleKeyPress);
+        });
+    }
+
+    // Start Animation and Initialize
     setInterval(drawMatrix, 50);
     init();
+
+
 </script>
 </body>
 </html>
